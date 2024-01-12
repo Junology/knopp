@@ -1,0 +1,965 @@
+% \iffalse meta-comment
+%
+% knopp.dtx
+% Copyright 2024 Jun Yoshida
+%
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%   https://www.latex-project.org/lppl.txt
+% and version 1.3c or later is part of all distributions of LaTeX
+% version 2008 or later.
+%
+% This work has the LPPL maintenance status `maintained'.
+% 
+% The Current Maintainer of this work is Jun Yoshida
+%
+% This work consists of the file knopp.dtx and the derived
+% files knopp.ins, knopp.sty, and knopp.pdf.
+%
+% \fi
+%
+% \iffalse
+%<*batchfile>
+\def\nameofplainTeX{plain}
+\ifx\fmtname\nameofplainTeX\else
+\expandafter\begingroup
+\fi
+
+\begingroup
+
+\immediate\write16{Format: \fmtname}
+\input docstrip.tex
+
+\immediate\write16{'docstrip.tex' successfully loaded}
+\keepsilent
+\askforoverwritefalse
+\usedir{tex/latex/\jobname}
+\preamble
+
+----------
+knopp
+A lightweight and minimalistic knot-drawing library
+----------
+
+Copyright 2023 Jun Yoshida
+
+This work may be distributed and/or modified under the
+conditions of the LaTeX Project Public License, either version 1.3
+of this license or (at your option) any later version.
+The latest version of this license is in
+  https://www.latex-project.org/lppl.txt
+and version 1.3c or later is part of all distributions of LaTeX
+version 2008 or later.
+
+This work has the LPPL maintenance status `maintained'.
+
+The Current Maintainer of this work is Jun Yoshida
+
+This work consists of the files knopp.dtx and knopp.ins
+and the derived file knopp.sty.
+
+\endpreamble
+\nopostamble
+
+\generate{\file{\jobname.sty}{\from{\jobname.dtx}{package}}}
+
+\ifx\fmtname\nameofplainTeX
+  \immediate\write16{****************************************************}
+  \immediate\wirte16{* To generate the document pdf '\jobname.pdf', run}
+  \immediate\wirte16{* \space\space pdflatex \jobname.dtx}
+  \immediate\wirte16{****************************************************}
+  \expandafter\endbatchfile
+\else
+  \expandafter\endgroup
+\fi
+%</batchfile>
+%
+%<*package>
+
+\NeedsTeXFormat{LaTeX2e}[2020/02/02]
+\ProvidesPackage{knopp}
+    [2024/01/07 v0.1 lightweight and minimalistic knot-drawing library]
+
+%</package>
+%
+%<*driver>
+\ProvidesFile{knopp.dtx}[2024/01/07 v0.1 lightweight and minimalistic knot-drawing library]
+\documentclass{ltxdoc}
+\usepackage[T1]{fontenc}
+\usepackage{amssymb}
+\usepackage{lmodern}
+\usepackage{enumitem}
+\usepackage{multicol}
+\usepackage{pgf}
+\usepackage{syntax}
+\usepackage{\jobname}[2024/01/07]
+\knoppenable{pgf}
+\EnableCrossrefs         
+\CodelineIndex
+\RecordChanges
+\begin{document}
+  \DocInput{knopp.dtx}
+  \PrintChanges
+  \PrintIndex
+\end{document}
+%</driver>
+% \fi
+%
+% \CheckSum{0}
+%
+% \CharacterTable
+%  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
+%   Lower-case    \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
+%   Digits        \0\1\2\3\4\5\6\7\8\9
+%   Exclamation   \!     Double quote  \"     Hash (number) \#
+%   Dollar        \$     Percent       \%     Ampersand     \&
+%   Acute accent  \'     Left paren    \(     Right paren   \)
+%   Asterisk      \*     Plus          \+     Comma         \,
+%   Minus         \-     Point         \.     Solidus       \/
+%   Colon         \:     Semicolon     \;     Less than     \<
+%   Equals        \=     Greater than  \>     Question mark \?
+%   Commercial at \@     Left bracket  \[     Backslash     \\
+%   Right bracket \]     Circumflex    \^     Underscore    \_
+%   Grave accent  \`     Left brace    \{     Vertical bar  \|
+%   Right brace   \}     Tilde         \~}
+%
+%
+% \changes{v0.1}{2024/01/07}{Initial version}
+%
+% \GetFileInfo{\jobname.dtx}
+%
+% \DoNotIndex{\newcommand,\newenvironment}
+%
+% 
+% \title{The \textsf{\jobname} package\thanks{This document
+%   corresponds to \textsf{knopp}~\fileversion, dated \filedate.}}
+% \author{Jun Yoshida}
+% \date{\filedate}
+%
+% \maketitle
+%
+% \section{Introduction}
+%
+% In the article on the knot theory and related topics, the author needs to draw pictures of knots or tangles.
+% It is nowadays common to make use of \textsf{PGF}/\textsf{Ti{\itshape k}Z} library to draw pictures on \TeX.
+% Although it is excellent both in the resulting pictures and customizability, one drawback is that the compile time with \textsf{Ti{\itshape k}Z} tends to be long so that the writing process can be painful.
+% In particular, as for knots, one of the major difficulties is the crossing point where the under-arc must be drawn with a gap.
+% There are several solution to this problems:
+% \begin{itemize}
+%   \item divide the under-arc into two at each crossing;
+%   \item draw the over-arc with border in the background color.
+% \end{itemize}
+% In the first solution, one needs to calculate the control points of the divided arcs which is heavy computation in general.
+% In the other solution, one should take care of the drawing order of the under- and over-arcs, which decreases the flexibility; e.g.~drawing the mirror image requires nearly full rewrite of the code.
+%
+% This is the main motivation for the author to develop a lightweight and minimalistic package specialized to knots and related pictures.
+% Specifically, the \textsf{knopp} package is a frontend, without any specific dependency, to build a sequence of paths for the arcs in knot projections.
+% The constructed paths are drawn with other graphical packages as a backend; for example, with \textsf{PGF} package, the trifoil knot is drawn as follows:
+% \begin{center}
+% \begin{pgfpicture}
+% \pgfpathrectangle{\pgfqpoint{-2cm}{-2cm}}{\pgfqpoint{4cm}{4cm}}
+% \pgfusepath{use as bounding box}
+% \begin{knopp}
+% \cross+{C1}{c_1}{-30}(1cm,-.5cm){15}{105}
+% \cross+{C2}{c_2}{90}(0cm,1.232cm){135}{225}
+% \cross+{C3}{c_3}{210}(-1cm,-.5cm){-105}{-15}
+% \strand (C1 1) -[1.5] (C2 2) -[.5] (C3 1) -[1.5] (C1 2)%
+%         -[.5] (C2 1) -[1.5] (C3 2) -[.5] (C1 1);
+% \end{knopp}
+% \pgfsetlinewidth{1pt}
+% \pgfusepathqstroke
+% \end{pgfpicture}
+% \end{center}
+% \begin{verbatim}
+% \begin{pgfpicture}
+% \pgfpathrectangle{\pgfqpoint{-2cm}{-2cm}}{\pgfqpoint{4cm}{4cm}}
+% \pgfusepath{use as bounding box}
+% \begin{knopp}
+% \cross+{C1}{c_1}{-30}(1cm,-.5cm){15}{105}
+% \cross+{C2}{c_2}{90}(0cm,1.232cm){135}{225}
+% \cross+{C3}{c_3}{210}(-1cm,-.5cm){-105}{-15}
+% \strand (C1 1) -[1.5] (C2 2) -[.5] (C3 1) -[1.5] (C1 2)%
+%         -[.5] (C2 1) -[1.5] (C3 2) -[.5] (C1 1);
+% \end{knopp}
+% \pgfsetlinewidth{1pt}
+% \pgfusepathqstroke
+% \end{pgfpicture}
+% \end{verbatim}
+%
+% \section{User guide}
+%
+% \subsection{Imports and enabling backends}
+%
+% To use the library, put the following in the preamble:
+% \begin{verbatim}
+% \usepackage{knopp}
+% \end{verbatim}
+% After importing the package, one has to enable a configuration for drawing backend.
+% We recommend to use \textsf{PGF} backend for the ordinary use if it is available:
+% \begin{verbatim}
+% \knoppenable{pgf}
+% \end{verbatim}
+%
+% \DescribeMacro{\knoppenable}
+% \verb|\knoppenable|\marg{name}:~enable a built-in configuration with the backend `\textsf{name}', which have to be one of the following.
+% \begin{itemize}
+%   \item \textsf{pgf}:~build paths on top of \textsf{PGF} basic layer
+%   \item \textsf{none}:~ignore all path constructions
+%   \item \textsf{raw}:~keep all path constructions as-is and stack them on the buffer.
+% The content of the buffer is called by \verb|\knoppusepath|.
+% \end{itemize}
+%
+% Alternatively, one can also define his own configuration for custom backends; see Section~\ref{sec:impl:framework} for details.
+%
+% \subsection{Basic usage}
+%
+% After enabling a backend, one can build paths for knot projections with \verb|knopp| environment.
+% For example, with \textsf{PGF} as the backend, the Hopf link $2_1$ is drawn as follows:
+% \begin{center}
+% \begin{minipage}[c]{.6\textwidth}
+% \begin{verbatim}
+% \begin{pgfpicture}
+% \pgfpathgrid%
+%   {\pgfqpoint{-2cm}{-2cm}}%
+%   {\pgfqpoint{2cm}{2cm}}
+% \pgfsetstrokecolor{gray!50}
+% \pgfusepath{stroke}
+% \begin{knopp}
+% \cross+{C1}{c_1}{90}(0pt,1cm){30}{150}
+% \cross+{C2}{c_2}{270}(0pt,-1cm){30}{150}
+% \strand (C1 1) -[2.5] (C2 2) - (C1 1);
+% \strand (C1 2) -[2.5] (C2 1) - (C1 2);
+% \end{knopp}
+% \pgfsetstrokecolor{black}
+% \pgfusepathqstroke
+% \knoppusetext
+% \end{pgfpicture}
+% \end{verbatim}
+% \end{minipage}
+% \begin{pgfpicture}
+% \pgfsetbaseline{0pt}
+% \pgfpathgrid{\pgfqpoint{-2cm}{-2cm}}{\pgfqpoint{2cm}{2cm}}
+% \pgfsetstrokecolor{gray!50}
+% \pgfusepath{stroke}
+% \begin{knopp}
+% \cross+{C1}{c_1}{90}(0pt,1cm){30}{150}
+% \cross+{C2}{c_2}{270}(0pt,-1cm){30}{150}
+% \strand (C1 1) -[2.5] (C2 2) - (C1 1);
+% \strand (C1 2) -[2.5] (C2 1) - (C1 2);
+% \end{knopp}
+% \pgfsetstrokecolor{black}
+% \pgfusepathqstroke
+% \knoppusetext
+% \end{pgfpicture}
+% \end{center}
+% 
+% \noindent\DescribeEnv{knopp}
+% The environment to build paths of arcs of knot projections.
+% The macros \verb|\cross| and \verb|\strand| are available only in this environment.
+%
+% \medskip
+% \begin{macro}{\cross}
+% \verb|\cross|\marg{type}\marg{name}\marg{label}\marg{$\alpha$}\parg{$x,y$}\marg{$\theta_1$}\marg{$\theta_2$}:
+% Put a crossing at a point $(x,y)$.
+% The meanings of the parameters are as follows:
+% \begin{itemize}
+%   \item \textit{type} is a type of the crossing: $+$ or $-$;
+%   \item \textit{name} is the name which the crossing is later referred to as;
+%   \item \textit{label} is the label attached to the crossing; note that it is internally surrounded in the math-mode;
+%   \item $\alpha$ is the angle in which the label is attached;
+%   \item $(x,y)$ is the coordinate of the crossing;
+%   \item $\theta_1$ and $\theta_2$ are the out-going angles of the first and the second arcs in the crossing.
+% \end{itemize}
+% \end{macro}
+%
+% \section{Implementation}
+%
+% \subsection{Basic math framework}
+%
+%\iffalse
+
+%%%
+%%% Basic math framework
+%%%
+
+%\fi
+%
+% \subsubsection{Function convention}
+%
+% In \TeX, there are several conventions of functions, in particular on how one gets the return value from a macro e.g.~\verb|\sin{0.25\pi}|.
+% We mix the following two approaches:
+% \begin{itemize}
+%   \item For a simple function $f$, a macro \verb|\f| is defined so that \verb|\f{x}| is expanded to the resulting value of $f(x)$.
+%   \item If a function $g$ requires some complicated computation, then we give up making \verb|\g| expandable.
+%   We instead define \verb|\g| so that \verb|\g{x}| sets some registers to the results of $g(x)$.
+%   Note that this is exactly the convention \textsf{PGF} library uses.
+% \end{itemize}
+% We call the first type of macros \emph{expandable macro functions} while the latter \emph{unexpandable macro functions}.
+% For unexpandable ones, we provide the following dimensions and counters.
+% \begin{macro}{\knopp@x}
+% \begin{macro}{\knopp@y}
+% \begin{macro}{\knopp@r}
+% \begin{macro}{\knopp@a}
+%    \begin{macrocode}
+%% The dimension where the calculation results are to be set.
+%% Each function set values to them to return values; e.g.
+%%   \global\knopp@x=0.5pt
+\newdimen\knopp@x % for x-coordinate
+\newdimen\knopp@y % for y-coordinate
+\newdimen\knopp@r % for radius
+%% The counter for angles of the form $n*\pi/12$
+\newcount\knopp@a % for angle
+%    \end{macrocode}
+
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% We also provide several auxiliary dimensions.
+%    \begin{macrocode}
+%% Auxiliary dimension registers
+%% The change of the values of these variables should not be \global
+\newdimen\knopp@xa
+\newdimen\knopp@ya
+\newdimen\knopp@xb
+\newdimen\knopp@yb
+\newdimen\knopp@xc
+\newdimen\knopp@yc
+\newdimen\knopp@xd
+\newdimen\knopp@yd
+%    \end{macrocode}
+
+%
+% \subsubsection{Simple trigonometry}
+%
+% For simplicity, only angles of the form $n\pi/12$ for $n\in\mathbb Z$ are allowed in this package.
+% Fortunately, $\sin(n\pi/12)$ can be computed by table-lookup on the very small size of the value tables.
+% \begin{macro}{\knopp@sin@prim}
+% \verb|\knopp@sin@prim|\marg{n}:
+% expandable macro function computing $\sin(n\pi/12)$ by table-lookup.
+%    \begin{macrocode}
+%% Precomputed values of $\sin(n*\pi/12)$
+\expandafter\def\csname knopp@sinchoice@0\endcsname{0sp}     % = sin(0) pt
+\expandafter\def\csname knopp@sinchoice@1\endcsname{16962sp} % = sin(\pi/12) pt
+\expandafter\def\csname knopp@sinchoice@2\endcsname{32768sp} % = sin(\pi/6) pt
+\expandafter\def\csname knopp@sinchoice@3\endcsname{46341sp} % = sin(\pi/4) pt
+\expandafter\def\csname knopp@sinchoice@4\endcsname{56756sp} % = sin(\pi/3) pt
+\expandafter\def\csname knopp@sinchoice@5\endcsname{63303sp} % = sin(5\pi/12) pt
+\expandafter\def\csname knopp@sinchoice@6\endcsname{65536sp} % = sin(\pi/2) pt
+
+%% One can get sin(n*\pi/12) by expanding e.g.
+%%   \knopp@sin@prim{n}
+%% for n = 0,1,2,3,4,5,6.
+\def\knopp@sin@prim#1{\csname knopp@sinchoice@#1\endcsname}
+%    \end{macrocode}
+% \end{macro}
+% \iffalse
+
+% \fi
+% \begin{macro}{\knopp@primvec}
+% \verb|\knopp@primvec|\marg{n}: unexpandable macro function computing the unit vector $(\cos(n\pi/12),\sin(n\pi/12))$.
+% This uses \verb|\knopp@sin@prim| to compute $\cos(n\pi/12)$ and $\sin(n\pi/12)$.
+%    \begin{macrocode}
+%% Compute the unit vector of a given angle.
+%%   \knopp@primvec{n}
+%% sets \knopp@x and \knopp@y to be cos(n\pi/12) and sin(n\pi/12) resp.
+\def\knopp@primvec#1{%
+  \knopp@a=#1\relax%
+  \ifnum\knopp@a<0%
+    \knopp@primvec{\the\numexpr\the\knopp@a+24\relax}%
+  \else\ifnum\knopp@a<7%
+    \global\knopp@x=\knopp@sin@prim{\the\numexpr6-\the\knopp@a\relax}%
+    \global\knopp@y=\knopp@sin@prim{\the\knopp@a}%
+  \else\ifnum\knopp@a<13%
+    \global\knopp@x=-\knopp@sin@prim{\the\numexpr\the\knopp@a-6\relax}%
+    \global\knopp@y=\knopp@sin@prim{\the\numexpr12-\the\knopp@a\relax}%
+  \else\ifnum\knopp@a<19%
+    \global\knopp@x=-\knopp@sin@prim{\the\numexpr18-\the\knopp@a\relax}%
+    \global\knopp@y=-\knopp@sin@prim{\the\numexpr\the\knopp@a-12\relax}%
+  \else\ifnum\knopp@a<25%
+    \global\knopp@x=\knopp@sin@prim{\the\numexpr\the\knopp@a-18\relax}%
+    \global\knopp@y=-\knopp@sin@prim{\the\numexpr24-\the\knopp@a\relax}%
+  \else%
+    \knopp@primvec{\the\numexpr\the\knopp@a-24\relax}%
+  \fi\fi\fi\fi\fi%
+}
+%    \end{macrocode}
+% \end{macro}
+
+% \begin{macro}{\knopp@atantwo}
+% \verb|\knopp@atantwo|\marg{x-coord}\marg{y-coord}:~unexpandable macro function approximate the angle of the given point $(x,y)$ by $n*\pi/12$.
+% The result is stored in \verb|\knopp@a|.
+% In fact, the computation itself is done by \verb|\knopp@atantwo@fstquad|.
+%    \begin{macrocode}
+%% Compute the angle of (x,y) approximated by n\pi/12
+%%   \knopp@atantwo{x}{y}
+%% The result is stored in \knopp@a
+\def\knopp@atantwo#1#2{%
+  \knopp@xa=\dimexpr #1\relax%
+  \knopp@ya=\dimexpr #2\relax\relax%
+  % Check if the y-coordinate is negative.
+  \ifdim \knopp@ya < 0pt%
+    % If negative, consider $(-x,-y)$ instead and set the offset to \knopp@a.
+    \knopp@xa=-\knopp@xa%
+    \knopp@ya=-\knopp@ya%
+    \knopp@a=12%
+  \else%
+    % If non-negative, initialize the angle counter.
+    \knopp@a=0%
+  \fi%
+  % Check if the x-coordinate is negative.
+  \ifdim \knopp@xa < 0pt%
+    % If negative, consider $(y,-x)$ instead and add the offset to \knopp@a
+    \advance\knopp@xa by \knopp@ya%
+    \advance\knopp@ya by -\knopp@xa%
+    \advance\knopp@xa by \knopp@ya%
+    \advance\knopp@a by 6%
+  \fi%
+  \advance\knopp@a by \knopp@atantwo@fstquad\knopp@xa\knopp@ya%
+  \global\knopp@a=\knopp@a
+}
+%    \end{macrocode}
+% \end{macro}
+
+% \begin{macro}{\knopp@atantwo@fstquad}
+% \verb|\knopp@atantwo@fstquad|\marg{x-coord}\marg{y-coord}:~expandable macro function approximate the angle of the given point $(x,y)$ by $n*\pi/12$.
+% This is an expandable analogue of \verb|\knopp@atantwo| with the assumption that $(x,y)$ is in the first-quadrant; i.e.~both the x-coordinate and the y-coordinate are non-negative.
+%    \begin{macrocode}
+%% Compute the angle of the first-quadrant vector
+%% The two arguments must be tokens for dimension registers with non-negative values.
+\def\knopp@atantwo@fstquad#1#2{%
+  % tan(\pi/24) = 0.1317...
+  \ifdim #2 < .1317#1%
+    0%
+  % tan(\pi/8) = 0.4142...
+  \else\ifdim #2 < .4142#1%
+    1%
+  % tan(5*\pi/24) = 0.7673...
+  \else\ifdim #2 < .7673#1%
+    2%
+  \else\ifdim .7673#2 < #1%
+    3%
+  \else\ifdim .4142#2 < #1%
+    4%
+  \else\ifdim .1317#2 < #1%
+    5%
+  \else%
+    6%
+  \fi\fi\fi\fi\fi\fi%
+}
+%    \end{macrocode}
+% \end{macro}
+
+% \subsubsection{Basic vector arithmetics}
+%
+% \begin{macro}{\knopp@pointset}
+% \verb|\knopp@pointset|\marg{x-coord}\marg{y-coord}:~set x- and y-coordinates to \verb|\knopp@x| and \verb|\knopp@y| respectively.
+%    \begin{macrocode}
+%% Set coordinate values to \knopp@x and \knopp@y
+\def\knopp@pointset#1#2{%
+  \knopp@x=#1\relax%
+  \knopp@y=#2\relax%
+}
+%    \end{macrocode}
+% \end{macro}
+
+% \begin{macro}{\knopp@pointadvance}
+% \verb|\knopp@pointadvance|\marg{dx}\marg{dy}:~increase \verb|\knopp@x| and \verb|\knopp@y| by $dx$ and $dy$ respectively.
+%    \begin{macrocode}
+%% Increase \knopp@x and \knopp@y
+\def\knopp@pointadvance#1#2{%
+  \advance\knopp@x by #1\relax%
+  \advance\knopp@y by #2\relax%
+}
+%    \end{macrocode}
+% \end{macro}
+
+% \begin{macro}{\knopp@norm}
+% \verb|\knopp@norm|\marg{x-coord}\marg{y-coord}:~unexpandable macro function computing the norm of the vector $(x,y)$.
+% To avoid to compute the square-root, it instead computes $x\cos\theta + y\sin\theta$ where $\theta=\arctan(y/x)$.
+% The result is stored to \verb|\knopp@x|.
+% Note that we use \verb|\knopp@atantwo| to calculate this $\theta$ so the result is not 100\% accurate.
+%    \begin{macrocode}
+%% Compute the norm of the vector (x,y):
+%%   \knopp@norm{x}{y}
+%% The result is stored to \knopp@atantwo
+\def\knopp@norm#1#2{%
+  \knopp@xa=\dimexpr #1\relax%
+  \knopp@ya=\dimexpr #2\relax%
+  \begingroup\knopp@atantwo{\knopp@xa}{\knopp@ya}\endgroup%
+  \knopp@primvec{\knopp@a}%
+  \global\knopp@x=\dimexpr\strip@pt\knopp@xa\knopp@x%
+    + \strip@pt\knopp@ya\knopp@y\relax%
+}
+%    \end{macrocode}
+% \end{macro}
+
+% \subsection{Drawing framework}
+% \label{sec:impl:framework}
+%
+% As mentioned in the introduction, the library does not actually draw anything.
+% It instead produces a sequence of ``path-construcing'' codes, which consists of the following four macros with arguments:
+% \begin{itemize}
+%   \item \verb|\knopp@cmd@move|\marg{x-coord}\marg{y-coord}:~to move the current cursor position to $(x,y)$;
+%   \item \verb|\knopp@cmd@line|\marg{x-coord}\marg{y-coord}:~to put a straight line from the current cursor position to $(x,y)$ before move to the end point;
+%   \item \verb|\knopp@cmd@curve|\marg{$x_0$}\marg{$y_0$}\marg{$x_1$}\marg{$y_1$}\marg{$x_2$}\marg{$y_2$}\marg{$x_3$}\marg{$y_3$}:~to put a cubic B\'ezier curve from $(x_0,y_0)$ to $(x_3,y_3)$ with control points $(x_1,y_1)$ and $(x_2,y_2)$.
+% \end{itemize}
+% In addition to them, it is also capable of labeling with texts.
+% Text-drawing commands are stacked on \verb|\knopp@buf@text| macro as
+% \begin{itemize}
+%   \item \verb|\knopp@cmd@text|\marg{x-coord}\marg{y-coord}\marg{text}:~put a label with \textit{text} at the coordinate $(x,y)$.
+% \end{itemize}
+% Thanks to the buffering of text labels, it can be assured that all the labels are drawn above the other picture materials.
+%
+% Hence, by implementing the commands above in other graphic library such as \textsf{PGF}/\textsf{Ti{\itshape k}Z}, one obtains the actual pictures.
+% For example, the code
+% \begin{verbatim}
+% \begingroup
+% \makeatletter
+% \def\knopp@cmd@move#1#2{move(\the\dimexpr #1\relax,\the\dimexpr #2\relax)}
+% \def\knopp@cmd@line#1#2{line(\the\dimexpr #1\relax,\the\dimexpr #2\relax)}
+% \def\knopp@cmd@curve#1#2#3#4#5#6#7#8{%
+%   curve(\the\dimexpr #1\relax,\the\dimexpr #2\relax)%
+%   ..(\the\dimexpr #3\relax,\the\dimexpr #4\relax)%
+%   \&(\the\dimexpr #5\relax,\the\dimexpr #6\relax)%
+%   ..(\the\dimexpr #7\relax,\the\dimexpr #8\relax)%
+% }
+% \makeatother
+% \begin{knopp}
+% \cross+{C1}{c_1}{-30}{1cm}{-.5cm}{15}{105}
+% \cross+{C2}{c_2}{90}{0cm}{1.232cm}{135}{225}
+% \cross+{C3}{c_3}{210}{-1cm}{-.5cm}{-105}{-15}
+% \strand (C1 1) -[1.5] (C2 2) -[.5] (C3 1) -[1.5] (C1 2)%
+%         -[.5] (C2 1) -[1.5] (C3 2) -[.5] (C1 1);
+% \end{knopp}
+% \endgroup
+% \end{verbatim}
+% will produces the following:
+% \begingroup
+% \makeatletter
+% \def\knopp@cmd@move#1#2{move\mbox{(\the\dimexpr #1\relax,\the\dimexpr #2\relax)}\space\linebreak[0]}
+% \def\knopp@cmd@line#1#2{line\mbox{(\the\dimexpr #1\relax,\the\dimexpr #2\relax)}\space\linebreak[0]}
+% \def\knopp@cmd@curve#1#2#3#4#5#6#7#8{%
+%   curve(\the\dimexpr #1\relax,\the\dimexpr #2\relax)\linebreak[0]%
+%   ..(\the\dimexpr #3\relax,\the\dimexpr #4\relax)\linebreak[0]%
+%   \&(\the\dimexpr #5\relax,\the\dimexpr #6\relax)\linebreak[0]%
+%   ..(\the\dimexpr #7\relax,\the\dimexpr #8\relax)\space\linebreak[0]%
+% }
+% \makeatother
+% \begin{flushleft}
+% \begin{knopp}
+% \cross+{C1}{c_1}{-30}(1cm,-.5cm){15}{105}
+% \cross+{C2}{c_2}{90}(0cm,1.232cm){135}{225}
+% \cross+{C3}{c_3}{210}(-1cm,-.5cm){-105}{-15}
+% \strand (C1 1) -[1.5] (C2 2) -[.5] (C3 1) -[1.5] (C1 2)%
+%         -[.5] (C2 1) -[1.5] (C3 2) -[.5] (C1 1);
+% \end{knopp}
+% \end{flushleft}
+% \endgroup
+%
+% \iffalse
+
+%%%
+%%% Basic drawing framework
+%%%
+%%% The package does not actually provide any code producing pictures.
+%%% It instead issues path-constructing operations.
+%%% On the other hand, texts elements (e.g. the labels of crossings) are stored to a separated buffer; namely \knopp@buf@text in order to issue the text-drawing command separately.
+%%% Specifically, we assume the following commands are properly defined;
+%%%   - \knopp@cmd@move{x}{y}: move the current position to (x,y);
+%%%   - \knopp@cmd@line{x}{y}: put a straight line from the current position to (x,y) before move to (x,y);
+%%%   - \knopp@cmd@curve{xs}{ys}{xc}{yc}{xd}{yd}{xt}{yt}: put a (cubic) Bezier curve from (xs,ys) to (xt,yt) with control points (xc,yc) and (xd,yd).
+%%%   - \knopp@cmd@text{x}{y}{text}: drawing 'text' at the position (x,y);
+%%% See the implementations in the PGF basic layer below.
+%%%
+
+% \fi
+%
+% \subsubsection{Built-in implementations}
+% \label{sec:impl:builtin}
+%
+% The package has built-in configurations for some backends.
+% If a configuration is available, one can enable it using the next command:
+% \begin{macro}{\knoppenable}
+% \verb|\knoppenable|\marg{name}:~load the built-in implementations of \verb|\knopp@cmd@*| macro family associated to the backend `\textsf{name}'.
+%    \begin{macrocode}
+%% Load the built-in implementation of \knopp@cmd@* macro family associated to the name 'name'
+%%   \knoppenable{name}
+\def\knoppenable#1{\csname knopp@impl@#1\endcsname}
+%    \end{macrocode}
+
+% \end{macro}
+% Currently, there are three implementations:~\textsf{PGF}, \textsf{none}, and \textsf{raw}.
+%    \begin{macrocode}
+%% Implementation in the PGF basic layer
+\def\knopp@impl@pgf{%
+  \def\knopp@cmd@text##1##2##3{\pgftext[at={\pgfqpoint{##1}{##2}}]{##3}}%
+  \let\knopp@cmd@move=\pgfpathqmoveto%
+  \let\knopp@cmd@line=\pgfpathqlineto%
+  \def\knopp@cmd@curve##1##2##3##4##5##6##7##8{%
+    \pgfpathqmoveto{##1}{##2}%
+    \pgfpathqcurveto{##3}{##4}{##5}{##6}{##7}{##8}%
+  }%
+  % If you want "fancy" paths, use the below instead.
+  % \def\knopp@cmd@move#1#2{\pgfpathmoveto{\pgfqpoint{#1}{#2}}}
+  % \def\knopp@cmd@line#1#2{\pgfpathlineto{\pgfqpoint{#1}{#2}}}
+}
+
+%% Implement drawing commands as "do nothing"
+\def\knopp@impl@none{%
+  \def\knopp@cmd@text##1##2##3{}%
+  \let\knopp@cmd@move=\@gobbletwo%
+  \let\knopp@cmd@line=\@gobbletwo%
+  \def\knopp@cmd@curve##1##2##3##4##5##6##7##8{}%
+}
+
+%% Implementation such that drawing commands are buffered
+\def\knopp@impl@raw{%
+  \def\knopp@buf@path{}%
+  \def\knoppusepath{\knopp@buf@path}%
+  \def\knopp@cmd@text##1##2##3{%
+    \global\edef\knopp@buf@path{%
+      \expandafter\unexpanded\expandafter{\knopp@buf@path}%
+      \noexpand\knopp@cmd@text{##1}{##2}{\unexpanded{##3}}%
+    }%
+  }%
+  \def\knopp@cmd@move##1##2{%
+    \global\edef\knopp@buf@path{%
+      \expandafter\unexpanded\expandafter{\knopp@buf@path}%
+      \noexpand\knopp@cmd@move{##1}{##2}%
+    }%
+  }%
+  \def\knopp@cmd@line##1##2{%
+    \global\edef\knopp@buf@path{%
+      \expandafter\unexpanded\expandafter{\knopp@buf@path}%
+      \noexpand\knopp@cmd@line{##1}{##2}%
+    }%
+  }%
+  \def\knopp@cmd@curve##1##2##3##4##5##6##7##8{%
+    \global\edef\knopp@buf@path{%
+      \expandafter\unexpanded\expandafter{\knopp@buf@path}%
+      \noexpand\knopp@cmd@curve{##1}{##2}{##3}{##4}{##5}{##6}{##7}{##8}%
+    }%
+  }%
+}
+
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%%%
+%%% Dimension parameters
+%%%
+
+% The radius of the blank put around the under-crossing
+\newdimen\knopp@inner@sep
+\knopp@inner@sep=1ex
+% The radius of the crossing
+\newdimen\knopp@outer@sep
+\knopp@outer@sep=5pt
+
+
+%%%
+%%% Crossings
+%%%
+
+% Declare a crossing
+% \knopp@cross@impl{type}{name}{label}{label angle}{x}{y}{angle1}{angle2}
+% The type 't' must be a string such that \knopp@cross@type@<t>{x}{y}{m}{n} is a valid command exactly drawing the crossing at (x,y) with two strand in angles $m*\pi/12$ and $n*\pi/12$.
+\def\knopp@cross@impl#1#2#3#4(#5,#6)#7#8{%
+  \message{\detokenize{\cross{#1}{#2}{#3}{#4}{#5}{#6}{#7}{#8}}}%
+  % Render the crossing
+  % The radius of the crossing node is set to \knopp@r afterward
+  \csname knopp@cross@type@#1\endcsname{#5}{#6}{\the\numexpr #7/15\relax}{\the\numexpr #8/15\relax}%
+  % Remember the coordinates and angles as a macro
+  \expandafter\edef\csname knopp@args@#2\endcsname{%
+    {#5}{#6}{\the\numexpr #7/15\relax}{\the\numexpr #8/15\relax}{\strip@pt\knopp@r}%
+  }%
+  \knopp@cross@mklabel{#3}{#4}{#5}{#6}
+}
+
+\def\knopp@cross@arg@center#1#2#3#4#5{{#1}{#2}}
+\expandafter\def\csname knopp@cross@arg@arg1\endcsname#1#2#3#4#5{#3}
+\expandafter\def\csname knopp@cross@arg@arg2\endcsname#1#2#3#4#5{#4}
+\def\knopp@cross@arg@rad#1#2#3#4#5{#5}
+
+% \knopp@cross@center@eval\macro{name} expands to \macro{x}{y} where x and y are the coordinates of the center of the crossing "name".
+\def\knopp@cross@center@eval#1#2{%
+  \expandafter#1\romannumeral-`0\expandafter\expandafter\expandafter\knopp@cross@arg@center\csname knopp@args@#2\endcsname%
+}
+
+% \knopp@cross@argi{name} expands to the i-th angle of the crossing "name" for i=1 or 2
+\def\knopp@cross@arg#1#2{%
+  \expandafter\expandafter\csname knopp@cross@arg@arg#1\endcsname\romannumeral-`0\csname knopp@args@#2\endcsname%
+}
+
+%% \knopp@cross@rad{name} expands to the radius in pt of the crossing 'name' as the 'pt'-free number.
+\def\knopp@cross@rad#1{%
+  \expandafter\expandafter\expandafter\knopp@cross@arg@rad\csname knopp@args@#1\endcsname%
+}
+
+%% Set \knopp@x and \knopp@y to be the coordinate of the out-going point
+\def\knopp@cross@out#1#2{%
+  \message{Computing out-going edge of (#2 #1)}%
+  \knopp@primvec{\numexpr\knopp@cross@arg{#1}{#2}\relax}%
+  \message{Direction: (\the\knopp@x,\the\knopp@y)}%
+  \message{Radius: \knopp@cross@rad{#2}}%
+  \knopp@x=\dimexpr \knopp@cross@rad{#2}\knopp@x\relax%
+  \knopp@y=\dimexpr \knopp@cross@rad{#2}\knopp@y\relax%
+  \knopp@cross@center@eval\knopp@pointadvance{#2}%
+}
+
+%% Set \knopp@x and \knopp@y to be the coordinate of the in-coming point
+\def\knopp@cross@in#1#2{%
+  \knopp@primvec{\numexpr\knopp@cross@arg{#1}{#2} + 12\relax}%
+  \knopp@x=\dimexpr \knopp@cross@rad{#2}\knopp@x\relax%
+  \knopp@y=\dimexpr \knopp@cross@rad{#2}\knopp@y\relax%
+  \knopp@cross@center@eval\knopp@pointadvance{#2}%
+}
+
+%% If \cname is expanded to <node> of the form 'name i', then \knopp@cross@eval\macro\cname expands to \macro{i}{name}.
+%% For example, the code
+%%   \def\cname{name 1}
+%%   \knopp@cross@eval\knopp@cross@in\cname
+%% sets \knopp@x and \knopp@y to be the coordinates of the first in-coming point of the corssing 'name'.
+\def\knopp@cross@eval#1#2{\expandafter\knopp@cross@eval@\expandafter#1\romannumeral-`0#2}
+\def\knopp@cross@eval@#1#2 #3{#1{#3}{#2}}
+
+\def\knoppdeftype#1{%
+  \ifcsname knopp@cross@type@#1\endcsname%
+    \errmessage{The crossing type '{#1}' is already defined}%
+    \expandafter\@gobble%
+  \else%
+    \expandafter\@firstofone%
+  \fi{\expandafter\def\csname knopp@cross@type@#1\endcsname##1##2##3##4}%
+}
+
+%% Attach a label to a crossing
+%%   \knopp@cross@mklabel{label}{angle}{x}{y}
+%% - label: the label text, which is internally put in the math-mode;
+%% - angle: the angle (in 360 degrees) of the direction the label attached;
+%% - x, y: the coordinate of the center of the crossing.
+\def\knopp@cross@mklabel#1#2#3#4{%
+  % Append the label rendering command to the buffer \knopp@buf@text
+  \setbox\@tempboxa\hbox{{\m@th${#1}$}}%
+  \knopp@primvec{\the\numexpr #2/15\relax}%
+  % Compute the size of the box
+  \knopp@xa=.5\wd\@tempboxa%
+  \knopp@ya=.5\dimexpr\ht\@tempboxa + \dp\@tempboxa\relax%
+  % Compute the inner product of the box metric with the angle vector
+  \ifdim\knopp@x < 0pt%
+    \knopp@xa=-\dimexpr \strip@pt\knopp@x\knopp@xa\relax%
+  \else%
+    \knopp@xa=\dimexpr \strip@pt\knopp@x\knopp@xa\relax%
+  \fi%
+  \ifdim\knopp@y < 0pt%
+    \advance\knopp@xa by -\dimexpr \strip@pt\knopp@y\knopp@ya\relax%
+  \else%
+    \advance\knopp@xa by \dimexpr \strip@pt\knopp@y\knopp@ya\relax%
+  \fi%
+  % Add the inner sep
+  \advance\knopp@xa by \knopp@inner@sep%
+  % Append the label renderer to the buffer
+  \global\edef\knopp@buf@text{%
+    \expandafter\unexpanded\expandafter{\knopp@buf@text}%
+    \noexpand\knopp@cmd@text{\the\dimexpr #3 + \strip@pt\knopp@xa\knopp@x\relax}{\the\dimexpr #4 + \strip@pt\knopp@xa\knopp@y\relax}{{\m@th\unexpanded{${#1}$}}}%
+  }%
+}
+
+%% Draw the crossing where the over-arc is in the first angle and the under-arc in the second.
+\knoppdeftype+{%
+  % Parse the arguments
+  \knopp@xa=\dimexpr #1\relax%
+  \knopp@ya=\dimexpr #2\relax%
+  % Draw the first arc, which is the over-arc
+  \knopp@primvec{#3}%
+  \knopp@x=\dimexpr \strip@pt\knopp@outer@sep\knopp@x\relax%
+  \knopp@y=\dimexpr \strip@pt\knopp@outer@sep\knopp@y\relax%
+  \knopp@cmd@move{\the\dimexpr\knopp@xa - \knopp@x\relax}{\the\dimexpr\knopp@ya - \knopp@y\relax}%
+  \knopp@cmd@line{\the\dimexpr\knopp@xa + \knopp@x\relax}{\the\dimexpr\knopp@ya + \knopp@y\relax}%
+  % Draw the second arc, which is the under-arc
+  \knopp@primvec{#4}%
+  \knopp@xb=\dimexpr \strip@pt\knopp@inner@sep\knopp@x\relax%
+  \knopp@yb=\dimexpr \strip@pt\knopp@inner@sep\knopp@y\relax%
+  \knopp@x=\dimexpr \strip@pt\knopp@outer@sep\knopp@x\relax%
+  \knopp@y=\dimexpr \strip@pt\knopp@outer@sep\knopp@y\relax%
+  \knopp@cmd@move{\the\dimexpr\knopp@xa - \knopp@x\relax}{\the\dimexpr\knopp@ya - \knopp@y\relax}%
+  \knopp@cmd@line{\the\dimexpr\knopp@xa - \knopp@xb\relax}{\the\dimexpr\knopp@ya - \knopp@yb\relax}%
+  \knopp@cmd@move{\the\dimexpr\knopp@xa + \knopp@xb\relax}{\the\dimexpr\knopp@ya + \knopp@yb\relax}%
+  \knopp@cmd@line{\the\dimexpr\knopp@xa + \knopp@x\relax}{\the\dimexpr\knopp@ya + \knopp@y\relax}%
+  % Finally, set \knopp@r to the radius; i.e. \knopp@outer@sep
+  \global\knopp@r=\knopp@outer@sep%
+}
+
+%% Draw the crossing where the under-arc is in the first angle and the over-arc in the second.
+\knoppdeftype-{%
+  % Parse the arguments
+  \knopp@xa=\dimexpr #1\relax%
+  \knopp@ya=\dimexpr #2\relax%
+  % Draw the first arc, which is the under-arc
+  \knopp@primvec{#3}%
+  \knopp@xb=\dimexpr \strip@pt\knopp@inner@sep\knopp@x\relax%
+  \knopp@yb=\dimexpr \strip@pt\knopp@inner@sep\knopp@y\relax%
+  \knopp@x=\dimexpr \strip@pt\knopp@outer@sep\knopp@x\relax%
+  \knopp@y=\dimexpr \strip@pt\knopp@outer@sep\knopp@y\relax%
+  \knopp@cmd@move{\the\dimexpr\knopp@xa - \knopp@x\relax}{\the\dimexpr\knopp@ya - \knopp@y\relax}%
+  \knopp@cmd@line{\the\dimexpr\knopp@xa - \knopp@xb\relax}{\the\dimexpr\knopp@ya - \knopp@yb\relax}%
+  \knopp@cmd@move{\the\dimexpr\knopp@xa + \knopp@xb\relax}{\the\dimexpr\knopp@ya + \knopp@yb\relax}%
+  \knopp@cmd@line{\the\dimexpr\knopp@xa + \knopp@x\relax}{\the\dimexpr\knopp@ya + \knopp@y\relax}%
+  % Draw the second arc, which is the over-arc
+  \knopp@primvec{#4}%
+  \knopp@x=\dimexpr \strip@pt\knopp@outer@sep\knopp@x\relax%
+  \knopp@y=\dimexpr \strip@pt\knopp@outer@sep\knopp@y\relax%
+  \knopp@cmd@move{\the\dimexpr\knopp@xa - \knopp@x\relax}{\the\dimexpr\knopp@ya - \knopp@y\relax}%
+  \knopp@cmd@line{\the\dimexpr\knopp@xa + \knopp@x\relax}{\the\dimexpr\knopp@ya + \knopp@y\relax}%
+  % Finally, set \knopp@r to the radius; i.e. \knopp@outer@sep
+  \global\knopp@r=\knopp@outer@sep%
+}
+
+%% Draw
+
+%%%
+%%% Strands
+%%%
+
+% Strand defining command is of the form
+% \strand <strand seq> ;
+% The strand sequence <strand seq> is defined as follows:
+%   <strand seq> = <node>; | <node> <edge> <strand seq>
+%   <node> = (s i)
+%   <edge> = c | c[s]
+% where
+%   - s stands for a string of non-whitespace characters
+%   - i = 1 or 2
+%   - c stands for either a single character or a grouped string (e.g. {Hello world!})
+% The command \strand is executed as follows:
+%
+% 1. Initialize \knopp@strand@lastedge to be empty
+
+% Begin to parse <strand seq>
+\def\knopp@strand@impl{%
+  \message{Debug}%
+  % Initialize \knopp@strand@lastedge to be "do nothing" command.
+  \let\knopp@strand@lastedge=\@gobble\message{Debug2}%
+  % Proceed to the node processing
+  \knopp@strand@impl@node%
+}
+
+% Process a node
+\def\knopp@strand@impl@node(#1){%
+  % Execute the edge-drawing command
+  \knopp@strand@lastedge{#1}%
+  % Check if the next token is ';'
+  % If so, it is the end of <strand seq>.
+  \@ifnextchar;{\@gobble}{%
+    % Set the "last visited" node
+    \def\knopp@strand@lastnode{#1}%
+    % Proceed to the edge processing
+    \knopp@strand@impl@edge%
+  }%
+}
+
+% Process an edge
+% Check if an optional argument is supplied, and pass to \knopp@strand@impl@edge@
+\def\knopp@strand@impl@edge#1{%
+  \@ifnextchar[{% }]{ balancing brackets
+    \knopp@strand@impl@edge@{#1}%
+  }{%
+    \knopp@strand@impl@edge@{#1}[]%
+  }%
+}
+
+% Process an edge with an argument
+% An edge is represented by a single character (such as '-' or '>') with an optional argument.
+% It sets \knopp@strand@lastedge to be an edge-drawing macro \knopp@edge@X (e.g. \csname knopp@edge@-\endcsname or \csname knopp@edge@>\endcsname) with appropriate arguments.
+\def\knopp@strand@impl@edge@#1[#2]{%
+  \message{Edge: '#1' with optional argument [#2]}
+  \def\knopp@strand@lastedge{%
+    \csname knopp@edge@#1\endcsname{#2}{\knopp@strand@lastnode}%
+  }%
+  \@ifnextchar({%}){ balancing brackets
+    \knopp@strand@impl@node%
+  }{%
+    \errmessage{Illegal character: expected node}
+  }%
+}
+
+% The macro defining edges.
+\def\knoppdefedge#1{%
+  \ifcsname knopp@edge@#1\endcsname%
+    \errmessage{The edge type '{#1}' is already defined}%
+    \expandafter\@gobble%
+  \else%
+    \expandafter\@firstofone%
+  \fi{\expandafter\def\csname knopp@edge@#1\endcsname##1##2##3}%
+}
+
+\knoppdefedge,{}
+
+% The ordinary solid edge
+\knoppdefedge-{%
+  % Load the coordinates associated to the source and the target crossings.
+  % In particular,
+  % - (\knopp@xa,\knopp@ya): the out-going point of the source
+  % - (\knopp@xb,\knopp@yb): the unit vector of the angle of the source
+  % - (\knopp@xc,\knopp@yc): the unit vector of the angle of the target
+  % - (\knopp@xd,\knopp@yd): the in-coming point of the target
+  \message{Edge: (#2) -> (#3)}%
+  \knopp@cross@eval\knopp@cross@out{#2}\relax%
+  \knopp@xa=\knopp@x%
+  \knopp@ya=\knopp@y%
+  \message{Source: (\the\knopp@xa,\the\knopp@ya)}%
+  \knopp@primvec{\knopp@cross@eval\knopp@cross@arg{#2}}\relax%
+  \knopp@xb=\knopp@x%
+  \knopp@yb=\knopp@y%
+  \knopp@primvec{\numexpr\knopp@cross@eval\knopp@cross@arg{#3}\relax}\relax%
+  \knopp@xc=\knopp@x%
+  \knopp@yc=\knopp@y%
+  \knopp@cross@eval\knopp@cross@in{#3}\relax%
+  \knopp@xd=\knopp@x%
+  \knopp@yd=\knopp@y%
+  \message{(#2) -> (#3)}%
+  % Compute the norm between two points
+  \knopp@pointadvance{-\knopp@xa}{-\knopp@ya}%
+  \begingroup\knopp@norm{\knopp@x}{\knopp@y}\endgroup%
+  % Compute the control points
+  \knopp@x=.5\dimexpr #1\knopp@x\relax%
+  \knopp@xb=\dimexpr \knopp@xa + \strip@pt\knopp@x\knopp@xb\relax%
+  \knopp@yb=\dimexpr \knopp@ya + \strip@pt\knopp@x\knopp@yb\relax%
+  \knopp@xc=\dimexpr \knopp@xd - \strip@pt\knopp@x\knopp@xc\relax%
+  \knopp@yc=\dimexpr \knopp@yd - \strip@pt\knopp@x\knopp@yc\relax%
+  % Draw the cubic Bezier curve
+  \knopp@cmd@curve{\the\knopp@xa}{\the\knopp@ya}{\the\knopp@xb}{\the\knopp@yb}{\the\knopp@xc}{\the\knopp@yc}{\the\knopp@xd}{\the\knopp@yd}%
+}
+
+%%%
+%%% Interface
+%%%
+\def\knoppusetext{\knopp@buf@text}
+\def\knopp{%
+  % Set the aliases to the basic picture materials
+  \let\cross=\knopp@cross@impl%
+  \let\strand=\knopp@strand@impl%
+  % The buffer for text elements; mainly used for labeling on crossings
+  \global\def\knopp@buf@text{}%
+}
+\let\endknopp=\relax
+%    \end{macrocode}
+%
+%
+% \Finale
+%
+% \typeout{***************************************************}
+% \typeout{* To finish the installation you have to move the}
+% \typeout{* followint file into a directory searched by TeX:}
+% \typeout{*}
+% \typeout{* \space\space knopp.sty}
+% \typeout{*}
+% \typeout{* Documentation is in knopp.pdf.}
+% \typeout{*}
+% \typeout{* Happy TeXing!}
+% \typeout{*}
+% \typeout{***************************************************}
+\endinput
+
