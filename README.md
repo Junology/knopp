@@ -7,13 +7,13 @@ This work is released under the LaTeX Project Public License v1.3c or later; see
 
 Run
 ```
-tex knotdraw.dtx
+tex knopp.dtx
 ```
-and copy `knotdraw.sty` to anywhere you want.
+and copy `knopp.sty` to anywhere you want.
 
 ## Documentation
 
 To obtain the package documentation, run
 ```
-pdflatex knotdraw.dtx
+pdflatex knopp.dtx
 ```
